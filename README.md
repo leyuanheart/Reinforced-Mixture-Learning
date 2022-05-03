@@ -27,18 +27,19 @@ This repository is the official implementation of the paper `Mixture-Learning-wi
 
 ## Reproduce simulation results
 
-We provide example codes in `regression.ipynb` and `classification.ipynb`.
+We provide example codes in `example.ipynb`.
 
-For **synthetic data analysis**, we consider cases in the table below.
+For **synthetic data analysis**, we consider Gaussian mixture settings and general settings. 
 
-![simulation settings](https://pic.imgdb.cn/item/61f2a3a32ab3f51d91f27762.png)
+![](D:\learngit\Mixture-Learning-with-Reinforcement-Learning\general_settings.png)
 
 For **real data analysis**, we apply our method in two UCI benchmark datasets summarized in the table below.
 
-| Dataset               | Samples | Features | Task           |
-| --------------------- | ------- | -------- | -------------- |
-| Spambase              | 3680    | 57       | Classification |
-| Communities and Crime | 1993    | 101      | Regression     |
+| Dataset                 | Samples | Features | Number of clusters |
+| ----------------------- | ------- | -------- | ------------------ |
+| Iris plants             | 150     | 4        | 3                  |
+| Wine recognition        | 178     | 13       | 3                  |
+| Breast cancer wisconsin | 569     | 30       | 2                  |
 
-You can run `.py` in the `synthetic_data_analysis` and `real_data_analysis` to get the results of this paper. Each file is self-contained.
+You can run `.py` in the `synthetic_data_analysis` and `real_data_analysis` to get the results of this paper.  Each file is self-contained.
 
