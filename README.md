@@ -1,6 +1,6 @@
-# Variable-Selection-with-Reinforcement-Learning
+# Mixture-Learning-with-Reinforcement-Learning
 
-This repository is the official implementation of the paper `Variable-Selection-with-Reinforcement-Learning` submitted to ICML 2022.
+This repository is the official implementation of the paper `Mixture-Learning-with-Reinforcement-Learning` submitted to NeurIPS 2022.
 
 ## Requirements
 
