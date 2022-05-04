@@ -184,6 +184,7 @@ def spectral_embeddings(X, graph, mode, n_neighbors, k):
 
 
 n = 200
+p = 2
 model_based = False
 early_stop = False
 units = 256
@@ -214,7 +215,7 @@ def run(seed):
     # X, label = make_classification(n_samples=n, n_features=p, n_informative=p, n_redundant=0, n_repeated=0,
     #                                n_classes=K, n_clusters_per_class=1, class_sep=2, random_state=seed)
     
-    _, p = X.shape
+
     K = len(np.unique(label))
     embedding_dim = K
     
