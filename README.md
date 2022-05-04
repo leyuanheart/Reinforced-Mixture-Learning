@@ -27,7 +27,7 @@ This repository is the official implementation of the paper `Mixture-Learning-wi
 
 ## Reproduce simulation results
 
-We provide example codes in `example.ipynb`.
+We provide example code in `example.ipynb`.
 
 For **synthetic data analysis**, we consider Gaussian mixture settings and general settings. 
 
