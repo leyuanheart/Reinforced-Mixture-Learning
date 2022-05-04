@@ -107,7 +107,7 @@ def figure_3():
     ax4.legend(loc='best')
 
 
-
+figure_3()
 
 
 # ================== model-free simulation results ================
@@ -167,7 +167,7 @@ def figure_5():
 
 
 
-
+figure_5()
 
 
 
