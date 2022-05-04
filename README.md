@@ -33,7 +33,7 @@ For **synthetic data analysis**, we consider Gaussian mixture settings and gener
 
 ![](https://pic.imgdb.cn/item/62728f9a0947543129d6f2e4.png)
 
-For **real data analysis**, we apply our method in two UCI benchmark datasets summarized in the table below.
+For **real data analysis**, we apply our method in three UCI benchmark datasets summarized in the table below.
 
 | Dataset                 | Samples | Features | Number of clusters |
 | ----------------------- | ------- | -------- | ------------------ |
