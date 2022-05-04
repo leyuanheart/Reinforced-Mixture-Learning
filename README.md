@@ -31,7 +31,7 @@ We provide example code in `example.ipynb`.
 
 For **synthetic data analysis**, we consider Gaussian mixture settings and general settings. 
 
-![]([D:\learngit\Mixture-Learning-with-Reinforcement-Learning\general_settings.png](https://pic.imgdb.cn/item/62728f9a0947543129d6f2e4.png))
+![](https://pic.imgdb.cn/item/62728f9a0947543129d6f2e4.png)
 
 For **real data analysis**, we apply our method in two UCI benchmark datasets summarized in the table below.
 
