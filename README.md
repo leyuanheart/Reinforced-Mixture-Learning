@@ -31,8 +31,8 @@ We provide an example code in `example.ipynb`.
 
 For **synthetic data analysis**, we consider Gaussian mixture settings and general settings. 
 
-![](https://github.com/leyuanheart/Mixture-Learning-with-Reinforcement-Learning/blob/main/general_settings.png)
-https://pic.imgdb.cn/item/62728f9a0947543129d6f2e4.png
+![fig](https://pic.imgdb.cn/item/62728f9a0947543129d6f2e4.png)
+
 
 For **real data analysis**, we apply our method to three UCI benchmark datasets summarized in the table below.
 
