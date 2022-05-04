@@ -27,13 +27,13 @@ This repository is the official implementation of the paper `Mixture-Learning-wi
 
 ## Reproduce simulation results
 
-We provide example code in `example.ipynb`.
+We provide an example code in `example.ipynb`.
 
 For **synthetic data analysis**, we consider Gaussian mixture settings and general settings. 
 
 ![](https://pic.imgdb.cn/item/62728f9a0947543129d6f2e4.png)
 
-For **real data analysis**, we apply our method in three UCI benchmark datasets summarized in the table below.
+For **real data analysis**, we apply our method to three UCI benchmark datasets summarized in the table below.
 
 | Dataset                 | Samples | Features | Number of clusters |
 | ----------------------- | ------- | -------- | ------------------ |
