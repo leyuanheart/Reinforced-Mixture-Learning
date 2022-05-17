@@ -1,6 +1,6 @@
 # Reinforced-Mixture-Learning
 
-This repository is the official implementation of the paper `Mixture-Learning-with-Reinforcement-Learning` submitted to NeurIPS 2022.
+This repository is the official implementation of the paper `Reinforced-Mixture-Learning` submitted to NeurIPS 2022.
 
 ## Requirements
 
