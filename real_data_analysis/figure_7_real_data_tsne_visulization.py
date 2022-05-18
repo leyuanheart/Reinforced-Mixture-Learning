@@ -42,6 +42,9 @@ from torch.nn import functional as F
 from torch.distributions import Categorical
 
 
+from rgcl import RGCL
+
+
 def get_data(x, batch_size=32):
     sample_size = x.shape[0]
     idx = np.random.choice(range(sample_size), batch_size, replace=False)
@@ -213,13 +216,13 @@ def spectral_embeddings(X, graph, mode, n_neighbors, k, normed=True):
 
 
 # ========================================================================
-fig, axes = plt.subplots(3, 6)
-plt.subplots_adjust(top=0.935,
-                    bottom=0.067,
-                    left=0.035,
-                    right=0.992,
-                    hspace=0.273,
-                    wspace=0.269)
+# fig, axes = plt.subplots(3, 6)
+# plt.subplots_adjust(top=0.935,
+#                     bottom=0.067,
+#                     left=0.035,
+#                     right=0.992,
+#                     hspace=0.273,
+#                     wspace=0.269)
 
 
 model_based = False
@@ -227,7 +230,6 @@ early_stop = False
 units = 256
 lr = 1e-3
 max_steps = 5000
-
 
 def Iris(seed, batch_size): 
     '''
@@ -319,6 +321,7 @@ def Iris(seed, batch_size):
     sc = cluster.SpectralClustering(n_clusters=K, n_components=K, affinity='nearest_neighbors', random_state=seed).fit(X)  # rbf 依然解决不了circle问题
     sc_pred = sc.labels_
     results[3, :] = metrics(label, sc_pred)
+       
     
     average_linkage = cluster.AgglomerativeClustering(
         linkage="average",
@@ -328,21 +331,28 @@ def Iris(seed, batch_size):
     al_pred = average_linkage.labels_
     results[4, :] = metrics(label, al_pred)
     
-    dbscan = cluster.DBSCAN(eps=0.5, min_samples=5).fit(X)
-    y_pred = dbscan.labels_
-    results[5, :] = metrics(label, y_pred)
+    rgcl_pred = RGCL(X, K, seed=seed)
+    results[5, :] = metrics(label, rgcl_pred)
     
-    optics = cluster.OPTICS(min_samples=5, xi=0.05).fit(X)
-    y_pred = optics.labels_
-    results[6, :] = metrics(label, y_pred)
+    
+    srgcl_pred = RGCL(X, K, sus_exp=True, seed=seed)
+    results[6, :] = metrics(label, srgcl_pred)
+    
+    # dbscan = cluster.DBSCAN(eps=0.5, min_samples=5).fit(X)
+    # y_pred = dbscan.labels_
+    # results[5, :] = metrics(label, y_pred)
+    
+    # optics = cluster.OPTICS(min_samples=5, xi=0.05).fit(X)
+    # y_pred = optics.labels_
+    # results[6, :] = metrics(label, y_pred)
     
     end = time.time()
     print(f'rd: {seed} take {datetime.timedelta(seconds = end - start)}')
     
-    return results, X, label, logits.argmax(dim=1).numpy(), gm_pred, km_pred, sc_pred, al_pred
+    return results, X, label, logits.argmax(dim=1).numpy(), gm_pred, km_pred, sc_pred, al_pred, rgcl_pred, srgcl_pred
 
 
-results, X, label, acp_pred, gm_pred, km_pred, sc_pred, al_pred = Iris(seed=20, batch_size=150)
+results, X, label, acp_pred, gm_pred, km_pred, sc_pred, al_pred, rgcl_pred, srgcl_pred = Iris(seed=20, batch_size=150)
 
 label = np.where(label==0, -1, label)
 label = np.where(label==1, 0, label)
@@ -350,6 +360,13 @@ label = np.where(label==-1, 1, label)
 
 acp_pred = acp_pred + 1
 acp_pred = np.where(acp_pred==3, 0, acp_pred)
+
+rgcl_pred = rgcl_pred + 1
+rgcl_pred = np.where(rgcl_pred==3, 0, rgcl_pred)
+
+srgcl_pred = srgcl_pred + 1
+srgcl_pred = np.where(srgcl_pred==3, 0, srgcl_pred)
+
 
 # par = range(60, 90)
 # fig, axes = plt.subplots(5, 6)
@@ -372,8 +389,9 @@ X_embedded = KernelPCA(n_components=2, kernel='rbf').fit_transform(X)
 
 
 
-label_list = [label, acp_pred, gm_pred, km_pred, sc_pred, al_pred]
-names = ['Ground Truth', 'ACE', 'GMM', 'K-Means', 'Spectral\nClustering', 'Agglomerative\nClustering']
+label_list = [label, acp_pred, gm_pred, km_pred, sc_pred, al_pred, rgcl_pred, srgcl_pred]
+names = ['Ground Truth', 'ACE', 'GMM', 'K-Means', 'Spectral Clustering', 'Agglomerative Clustering', 'RGCL', 'SRGCL']
+
 metric_names = ['Adjusted\nRand Index', 
                 'Adjusted\nMutual Information', 
                 'Homogeneity', 
@@ -399,18 +417,26 @@ metric_names = ['Adjusted\nRand Index',
 # axes[0, 0].set_xlabel('Iris Plants', fontdict={'fontsize': 15})
 # # fig.suptitle('Iris Plants')
 
+fig, axes = plt.subplots(3, 8)
+# plt.subplots_adjust(top=0.950,
+#                     bottom=0.067,
+#                     left=0.035,
+#                     right=0.992,
+#                     hspace=0.273,
+#                     wspace=0.269)
 
 idx = 0
-for j in range(6):
+for j in range(8):
     axes[0, j].scatter(X_embedded[:, 0], X_embedded[:, 1], 
-                        c=label_list[idx], alpha=1)
-    axes[0, j].set_title(names[idx], fontdict={'fontsize': 15})
+                        c=label_list[idx], alpha=1, s=14)
+    axes[0, j].set_title(names[idx], fontdict={'fontsize': 14})
     if j != 0:
-        axes[0, j].set_xlabel(f'Adjusted RI: {results[idx-1, 0]:.2f}, Adjusted MI: {results[idx-1, 1]:.2f}\nHomogeneity: {results[idx-1, 2]:.2f}, Completeness: {results[idx-1, 3]:.2f}')
+        axes[0, j].set_xlabel(f'Adjusted RI: {results[idx-1, 0]:.2f}, Adjusted MI: {results[idx-1, 1]:.2f}\nHomogeneity: {results[idx-1, 2]:.2f}, Completeness: {results[idx-1, 3]:.2f}', fontsize=8)
         axes[0, j].set_xticks(())
         axes[0, j].set_yticks(())
     idx += 1
 axes[0, 0].set_xlabel('Iris Plants', fontdict={'fontsize': 15})
+axes[0, 5].set_title(names[5], fontdict={'fontsize': 13})
 # ========================================================================
 
 graph = 'k_nearest'  # k_nearest, kernel_based
@@ -515,6 +541,7 @@ def Wine(seed, batch_size):
     sc_pred = sc.labels_
     results[3, :] = metrics(label, sc_pred)
     
+    
     average_linkage = cluster.AgglomerativeClustering(
         linkage="average",
         affinity="cityblock",
@@ -523,21 +550,29 @@ def Wine(seed, batch_size):
     al_pred = average_linkage.labels_
     results[4, :] = metrics(label, al_pred)
     
-    dbscan = cluster.DBSCAN(eps=0.5, min_samples=5).fit(X)
-    y_pred = dbscan.labels_
-    results[5, :] = metrics(label, y_pred)
+    rgcl_pred = RGCL(X, K, seed=42)
+    results[5, :] = metrics(label, rgcl_pred)
     
-    optics = cluster.OPTICS(min_samples=5, xi=0.05).fit(X)
-    y_pred = optics.labels_
-    results[6, :] = metrics(label, y_pred)
+    
+    srgcl_pred = RGCL(X, K, sus_exp=True, seed=seed)
+    results[6, :] = metrics(label, srgcl_pred)
+    
+    # dbscan = cluster.DBSCAN(eps=0.5, min_samples=5).fit(X)
+    # y_pred = dbscan.labels_
+    # results[5, :] = metrics(label, y_pred)
+    
+    # optics = cluster.OPTICS(min_samples=5, xi=0.05).fit(X)
+    # y_pred = optics.labels_
+    # results[6, :] = metrics(label, y_pred)
     
     end = time.time()
     print(f'rd: {seed} take {datetime.timedelta(seconds = end - start)}')
     
-    return results, X, label, logits.argmax(dim=1).numpy(), gm_pred, km_pred, sc_pred, al_pred
+    return results, X, label, logits.argmax(dim=1).numpy(), gm_pred, km_pred, sc_pred, al_pred, rgcl_pred, srgcl_pred
 
 
-results, X, label, acp_pred, gm_pred, km_pred, sc_pred, al_pred = Wine(seed=5, batch_size=100)
+
+results, X, label, acp_pred, gm_pred, km_pred, sc_pred, al_pred, rgcl_pred, srgcl_pred = Wine(seed=5, batch_size=100)
 
 
 label = np.where(label==0, -1, label)
@@ -554,6 +589,10 @@ km_pred = np.where(km_pred==3, 1, km_pred)
 al_pred = np.where(al_pred==0, -1, al_pred)
 al_pred = np.where(al_pred==1, 0, al_pred)
 al_pred = np.where(al_pred==-1, 1, al_pred)
+
+srgcl_pred += 1
+srgcl_pred = np.where(srgcl_pred==3, 0, srgcl_pred)
+
 
 
 # par = range(30, 60)
@@ -579,7 +618,7 @@ X_embedded = KernelPCA(n_components=2, kernel='rbf').fit_transform(X)
 
 
 
-label_list = [label, acp_pred, gm_pred, km_pred, sc_pred, al_pred]
+label_list = [label, acp_pred, gm_pred, km_pred, sc_pred, al_pred, rgcl_pred, srgcl_pred]
 # names = ['Ground Truth', 'ACE', 'GMM', 'K-Means', 'Spectral Clustering', 'Agglomerative Clustering']
 
 # fig, axes = plt.subplots(2, 3)
@@ -601,12 +640,12 @@ label_list = [label, acp_pred, gm_pred, km_pred, sc_pred, al_pred]
 
 
 idx = 0
-for j in range(6):
+for j in range(8):
     axes[1, j].scatter(X_embedded[:, 0], X_embedded[:, 1], 
-                        c=label_list[idx], alpha=1)
+                        c=label_list[idx], alpha=1, s=14)
     # axes[1, j].set_title(names[idx], fontdict={'fontsize': 15})
     if j != 0:
-        axes[1, j].set_xlabel(f'Adjusted RI: {results[idx-1, 0]:.2f}, Adjusted MI: {results[idx-1, 1]:.2f}\nHomogeneity: {results[idx-1, 2]:.2f}, Completeness: {results[idx-1, 3]:.2f}')
+        axes[1, j].set_xlabel(f'Adjusted RI: {results[idx-1, 0]:.2f}, Adjusted MI: {results[idx-1, 1]:.2f}\nHomogeneity: {results[idx-1, 2]:.2f}, Completeness: {results[idx-1, 3]:.2f}', fontsize=8)
         axes[1, j].set_xticks(())
         axes[1, j].set_yticks(())
     idx += 1
@@ -711,7 +750,7 @@ def Breast(seed, batch_size):
     sc = cluster.SpectralClustering(n_clusters=K, n_components=K, affinity='nearest_neighbors', random_state=seed).fit(X)  # rbf 依然解决不了circle问题
     sc_pred = sc.labels_
     results[3, :] = metrics(label, sc_pred)
-    
+        
     average_linkage = cluster.AgglomerativeClustering(
         linkage="average",
         affinity="cityblock",
@@ -720,21 +759,29 @@ def Breast(seed, batch_size):
     al_pred = average_linkage.labels_
     results[4, :] = metrics(label, al_pred)
     
-    dbscan = cluster.DBSCAN(eps=0.5, min_samples=5).fit(X)
-    y_pred = dbscan.labels_
-    results[5, :] = metrics(label, y_pred)
+    rgcl_pred = RGCL(X, K, seed=seed)
+    results[5, :] = metrics(label, rgcl_pred)
     
-    optics = cluster.OPTICS(min_samples=5, xi=0.05).fit(X)
-    y_pred = optics.labels_
-    results[6, :] = metrics(label, y_pred)
+    
+    srgcl_pred = RGCL(X, K, sus_exp=True, seed=seed)
+    results[6, :] = metrics(label, srgcl_pred)
+    
+    # dbscan = cluster.DBSCAN(eps=0.5, min_samples=5).fit(X)
+    # y_pred = dbscan.labels_
+    # results[5, :] = metrics(label, y_pred)
+    
+    # optics = cluster.OPTICS(min_samples=5, xi=0.05).fit(X)
+    # y_pred = optics.labels_
+    # results[6, :] = metrics(label, y_pred)
     
     end = time.time()
     print(f'rd: {seed} take {datetime.timedelta(seconds = end - start)}')
     
-    return results, X, label, logits.argmax(dim=1).numpy(), gm_pred, km_pred, sc_pred, al_pred
+    return results, X, label, logits.argmax(dim=1).numpy(), gm_pred, km_pred, sc_pred, al_pred, rgcl_pred, srgcl_pred
 
 
-results, X, label, acp_pred, gm_pred, km_pred, sc_pred, al_pred = Breast(seed=5, batch_size=64)
+
+results, X, label, acp_pred, gm_pred, km_pred, sc_pred, al_pred, rgcl_pred, srgcl_pred = Breast(seed=5, batch_size=64)
 
 
 
@@ -746,10 +793,17 @@ km_pred = np.where(km_pred==0, -1, km_pred)
 km_pred = np.where(km_pred==1, 0, km_pred)
 km_pred = np.where(km_pred==-1, 1, km_pred)
 
-
 al_pred = np.where(al_pred==0, -1, al_pred)
 al_pred = np.where(al_pred==1, 0, al_pred)
 al_pred = np.where(al_pred==-1, 1, al_pred)
+
+rgcl_pred = np.where(rgcl_pred==0, -1, rgcl_pred)
+rgcl_pred = np.where(rgcl_pred==1, 0, rgcl_pred)
+rgcl_pred = np.where(rgcl_pred==-1, 1, rgcl_pred)
+
+srgcl_pred = np.where(srgcl_pred==0, -1, srgcl_pred)
+srgcl_pred = np.where(srgcl_pred==1, 0, srgcl_pred)
+srgcl_pred = np.where(srgcl_pred==-1, 1, srgcl_pred)
 
 
 # par = range(30, 60)
@@ -775,7 +829,7 @@ X_embedded = KernelPCA(n_components=2, kernel='rbf').fit_transform(X)
 
 
 
-label_list = [label, acp_pred, gm_pred, km_pred, sc_pred, al_pred]
+label_list = [label, acp_pred, gm_pred, km_pred, sc_pred, al_pred, rgcl_pred, srgcl_pred]
 # names = ['Ground Truth', 'ACE', 'GMM', 'K-Means', 'Spectral Clustering', 'Agglomerative Clustering']
 
 # fig, axes = plt.subplots(2, 3)
@@ -799,20 +853,16 @@ label_list = [label, acp_pred, gm_pred, km_pred, sc_pred, al_pred]
 
 
 idx = 0
-for j in range(6):
+for j in range(8):
     axes[2, j].scatter(X_embedded[:, 0], X_embedded[:, 1], 
-                        c=label_list[idx], alpha=1)
+                        c=label_list[idx], alpha=1, s=14)
     # axes[1, j].set_title(names[idx], fontdict={'fontsize': 15})
     if j != 0:
-        axes[2, j].set_xlabel(f'Adjusted RI: {results[idx-1, 0]:.2f}, Adjusted MI: {results[idx-1, 1]:.2f}\nHomogeneity: {results[idx-1, 2]:.2f}, Completeness: {results[idx-1, 3]:.2f}')
+        axes[2, j].set_xlabel(f'Adjusted RI: {results[idx-1, 0]:.2f}, Adjusted MI: {results[idx-1, 1]:.2f}\nHomogeneity: {results[idx-1, 2]:.2f}, Completeness: {results[idx-1, 3]:.2f}', fontsize=8)
         axes[2, j].set_xticks(())
         axes[2, j].set_yticks(())
     idx += 1
 axes[2, 0].set_xlabel('Breast cancer wisconsin', fontdict={'fontsize': 15})
-
-
-
-
 
 
 

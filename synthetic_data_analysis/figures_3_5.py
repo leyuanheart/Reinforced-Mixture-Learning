@@ -124,16 +124,26 @@ paths = os.listdir('./results/model_free')
 # 5 'n200_p2_K3_varied_variances_units256_bz32_lr1e-3_maxiter6000.npy'
 
 
-x_labels = [100, 200, 300, 400]
+x_labels = [300, 600, 900, 1200]
 metric_names = ['Adjusted\nRand Index', 'Adjusted\nMutual Information', 
                 'Homogeneity', 'Completeness']
-method_names = ['ACE', 'GMM', 'K-Means', 'Spectral Clustering', 'Agglomerative Clustering']
+method_names = ['ACE', 'GMM', 'K-Means', 'Spectral Clustering', 'Agglomerative Clustering', 'RGCL', 'SRGCL']
 data_names = ['Cricles', 'Moons', 'Blobs', 'Anisotropicly distributed blobs', 'Blobs with varied variances', 'Make classification']
 
 idx_list = [0, 1, 3, 2, 5, 4]
 
+
+circle = np.load('./results/rgcl_results/circle.npy')
+moon = np.load('./results/rgcl_results/moon.npy')
+blob = np.load('./results/rgcl_results/blob.npy')
+anisotropic_blob = np.load('./results/rgcl_results/anisotropic_blob.npy')
+varied_var_blob = np.load('./results/rgcl_results/varied_var_blob.npy')
+make_class = np.load('./results/rgcl_results/make_class.npy')
+rgcl_dats = [circle, moon, blob, anisotropic_blob, varied_var_blob, make_class]
+
+
 def figure_5():
-    fig, axes = plt.subplots(2, 3)  # , figsize=(10, 10)
+    fig, axes = plt.subplots(2, 3, sharey=True)  # , figsize=(10, 10)
     plt.style.use('bmh')
     plt.subplots_adjust(top=0.95,
                         bottom=0.05,
@@ -150,11 +160,16 @@ def figure_5():
             means = dats.mean(axis=0)    
             stds = dats.std(axis=0)
             
-            axes[i, j].errorbar(np.array(x_labels)-30, means[0, :], yerr=stds[0, :], fmt='o', elinewidth=5, ms=10, label=method_names[0])
-            axes[i, j].errorbar(np.array(x_labels)-15, means[1, :], yerr=stds[1, :], fmt='o', elinewidth=5, ms=10, label=method_names[1])
-            axes[i, j].errorbar(np.array(x_labels), means[2, :], yerr=stds[2, :], fmt='o', elinewidth=5, ms=10, label=method_names[2])
-            axes[i, j].errorbar(np.array(x_labels)+15, means[3, :], yerr=stds[3, :], fmt='o', elinewidth=5, ms=10, label=method_names[3])
-            axes[i, j].errorbar(np.array(x_labels)+30, means[4, :], yerr=stds[4, :], fmt='o', elinewidth=5, ms=10, label=method_names[4])
+            axes[i, j].errorbar(np.array(x_labels)-90, means[0, :], yerr=stds[0, :], fmt='o', elinewidth=5, ms=9, label=method_names[0])
+            axes[i, j].errorbar(np.array(x_labels)-60, means[1, :], yerr=stds[1, :], fmt='o', elinewidth=5, ms=9, label=method_names[1])
+            axes[i, j].errorbar(np.array(x_labels)-30, means[2, :], yerr=stds[2, :], fmt='o', elinewidth=5, ms=9, label=method_names[2])
+            axes[i, j].errorbar(np.array(x_labels), means[3, :], yerr=stds[3, :], fmt='o', elinewidth=5, ms=9, label=method_names[3])
+            axes[i, j].errorbar(np.array(x_labels)+30, means[4, :], yerr=stds[4, :], fmt='o', elinewidth=5, ms=9, label=method_names[4])
+            
+            rgcl_dat = rgcl_dats[idx]
+            axes[i, j].errorbar(np.array(x_labels)+60, rgcl_dat.mean(axis=0)[0, :], yerr=rgcl_dat.std(axis=0)[0, :], fmt='o', elinewidth=5, ms=9, label=method_names[5])
+            axes[i, j].errorbar(np.array(x_labels)+90, rgcl_dat.mean(axis=0)[1, :], yerr=rgcl_dat.std(axis=0)[1, :], fmt='o', elinewidth=5, ms=9, label=method_names[6], c='red')
+            
             axes[i, j].set_xticks(x_labels)
             axes[i, j].set_xticklabels(metric_names)
             axes[i, j].set_xlabel('')
@@ -164,6 +179,7 @@ def figure_5():
             
             idx += 1
     axes[0, 0].legend(loc='center right')
+    axes[0, 2].legend(loc='lower right')
 
 
 

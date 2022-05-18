@@ -39,6 +39,8 @@ from torch import optim
 from torch.nn import functional as F
 from torch.distributions import Categorical
 
+from rgcl import RGCL
+
 
 def get_data(x, batch_size=32):
     sample_size = x.shape[0]
@@ -293,7 +295,7 @@ seeds = [3, 6, 6, 9, 1, 10]
 def figure_4():
     pass
 
-fig, axes = plt.subplots(6, 6, figsize=(15, 45))
+fig, axes = plt.subplots(6, 8, figsize=(15, 45))
 plt.subplots_adjust(
                     top=0.955,
                     bottom=0.03,
@@ -341,6 +343,9 @@ for i in range(6):
                                                       affinity="cityblock",
                                                       n_clusters=k_list[i],
                                                       ).fit(X)
+    y_rgcl = RGCL(X, k_list[i], seed=seeds[i])
+    y_srgcl = RGCL(X, k_list[i], sus_exp=True, seed=seeds[i])
+    
     
     axes[i, 1].scatter(X[:,0], X[:, 1], c=logits.argmax(dim=1), s=15)  
     axes[i, 1].set_xticks(())
@@ -357,6 +362,12 @@ for i in range(6):
     axes[i, 5].scatter(X[:,0], X[:, 1], c=average_linkage.labels_, s=15)
     axes[i, 5].set_xticks(())
     axes[i, 5].set_yticks(())
+    axes[i, 6].scatter(X[:,0], X[:, 1], c=y_rgcl, s=15)
+    axes[i, 6].set_xticks(())
+    axes[i, 6].set_yticks(())
+    axes[i, 7].scatter(X[:,0], X[:, 1], c=y_srgcl, s=15)
+    axes[i, 7].set_xticks(())
+    axes[i, 7].set_yticks(())
             
 axes[0, 0].set_title('Ground Truth')
 axes[0, 1].set_title('ACE')
@@ -364,21 +375,21 @@ axes[0, 2].set_title('GMM')
 axes[0, 3].set_title('K-Means')
 axes[0, 4].set_title('Spectral\nClustering')
 axes[0, 5].set_title('Agglomerative\nClustering')
-    
+axes[0, 6].set_title('RGCL')    
+axes[0, 7].set_title('SRGCL')
 
 
 
 
 
-
-# fig, axes = plt.subplots(6, 6, figsize=(15, 45))
-# plt.subplots_adjust(
-#                     top=0.955,
-#                     bottom=0.03,
-#                     left=0.07,
-#                     right=0.925,
-#                     hspace=0.2,
-#                     wspace=0.125)
+# fig, axes = plt.subplots(6, 8) # , figsize=(15, 45)
+# # plt.subplots_adjust(
+# #                     top=0.955,
+# #                     bottom=0.03,
+# #                     left=0.07,
+# #                     right=0.925,
+# #                     hspace=0.2,
+# #                     wspace=0.125)
 
 
 
@@ -421,6 +432,11 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 #                                                     affinity="cityblock",
 #                                                     n_clusters=k_list[i],
 #                                                     ).fit(X)
+# y_rgcl = RGCL(X, k_list[i], seed=seeds[i])
+# y_srgcl = RGCL(X, k_list[i], sus_exp=True, seed=seeds[i])
+
+
+
 
 # axes[i, 1].scatter(X[:,0], X[:, 1], c=logits.argmax(dim=1), s=15)  
 # axes[i, 1].set_xticks(())
@@ -431,12 +447,26 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 # axes[i, 3].scatter(X[:,0], X[:, 1], c=km.labels_, s=15)   
 # axes[i, 3].set_xticks(())
 # axes[i, 3].set_yticks(())
-# axes[i, 4].scatter(X[:,0], X[:, 1], c=sc.labels_, s=15)
+
+# tmp = sc.labels_
+# tmp = np.where(tmp==0, 3, tmp)
+# tmp = np.where(tmp==1, 0, tmp)
+# tmp = np.where(tmp==3, 1, tmp)
+# axes[i, 4].scatter(X[:,0], X[:, 1], c=tmp, s=15)
 # axes[i, 4].set_xticks(())
-# axes[i, 4].set_yticks(())    
+# axes[i, 4].set_yticks(())  
+
 # axes[i, 5].scatter(X[:,0], X[:, 1], c=average_linkage.labels_, s=15)
 # axes[i, 5].set_xticks(())
 # axes[i, 5].set_yticks(())
+# axes[i, 6].scatter(X[:,0], X[:, 1], c=y_rgcl, s=15)
+# axes[i, 6].set_xticks(())
+# axes[i, 6].set_yticks(())
+
+
+# axes[i, 7].scatter(X[:,0], X[:, 1], c=y_srgcl, s=15)
+# axes[i, 7].set_xticks(())
+# axes[i, 7].set_yticks(())
         
 
 
@@ -480,6 +510,8 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 #                                                     affinity="cityblock",
 #                                                     n_clusters=k_list[i],
 #                                                     ).fit(X)
+# y_rgcl = RGCL(X, k_list[i], seed=seeds[i])
+# y_srgcl = RGCL(X, k_list[i], sus_exp=True, seed=seeds[i])
 
 # axes[i, 1].scatter(X[:,0], X[:, 1], c=logits.argmax(dim=1), s=15)  
 # axes[i, 1].set_xticks(())
@@ -496,6 +528,22 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 # axes[i, 5].scatter(X[:,0], X[:, 1], c=average_linkage.labels_, s=15)
 # axes[i, 5].set_xticks(())
 # axes[i, 5].set_yticks(())
+
+# tmp = y_rgcl
+# tmp = np.where(tmp==0, 3, tmp)
+# tmp = np.where(tmp==1, 0, tmp)
+# tmp = np.where(tmp==3, 1, tmp)
+# axes[i, 6].scatter(X[:,0], X[:, 1], c=tmp, s=15)
+# axes[i, 6].set_xticks(())
+# axes[i, 6].set_yticks(())
+
+# tmp = y_srgcl
+# tmp = np.where(tmp==0, 3, tmp)
+# tmp = np.where(tmp==1, 0, tmp)
+# tmp = np.where(tmp==3, 1, tmp)
+# axes[i, 7].scatter(X[:,0], X[:, 1], c=tmp, s=15)
+# axes[i, 7].set_xticks(())
+# axes[i, 7].set_yticks(())
 
 
 
@@ -538,6 +586,8 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 #                                                     affinity="cityblock",
 #                                                     n_clusters=k_list[i],
 #                                                     ).fit(X)
+# y_rgcl = RGCL(X, k_list[i], seed=42)
+# y_srgcl = RGCL(X, k_list[i], sus_exp=True, seed=seeds[i])
 
 
 # tmp = logits.argmax(dim=1).numpy()
@@ -573,7 +623,7 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 # axes[i, 4].set_xticks(())
 # axes[i, 4].set_yticks(())   
 
- 
+
 # tmp = average_linkage.labels_
 # tmp += 1
 # tmp = np.where(tmp==3, 0, tmp)
@@ -582,6 +632,16 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 # axes[i, 5].set_yticks(())
 
 
+# axes[i, 6].scatter(X[:,0], X[:, 1], c=y_rgcl, s=15)
+# axes[i, 6].set_xticks(())
+# axes[i, 6].set_yticks(())
+
+# tmp = y_srgcl
+# tmp += 1
+# tmp = np.where(tmp==3, 0, tmp)
+# axes[i, 7].scatter(X[:,0], X[:, 1], c=tmp, s=15)
+# axes[i, 7].set_xticks(())
+# axes[i, 7].set_yticks(())
 
 
 
@@ -624,6 +684,9 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 #                                                     affinity="cityblock",
 #                                                     n_clusters=k_list[i],
 #                                                     ).fit(X)
+# y_rgcl = RGCL(X, k_list[i], seed=seeds[i])
+# y_srgcl = RGCL(X, k_list[i], sus_exp=True, seed=seeds[i])
+
 
 # tmp = logits.argmax(dim=1).numpy()
 # tmp += 1
@@ -656,6 +719,23 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 # axes[i, 5].scatter(X[:,0], X[:, 1], c=tmp, s=15)
 # axes[i, 5].set_xticks(())
 # axes[i, 5].set_yticks(())
+
+
+# tmp = y_rgcl
+# tmp += 1
+# tmp = np.where(tmp==3, 0, tmp)
+# axes[i, 6].scatter(X[:,0], X[:, 1], c=tmp, s=15)
+# axes[i, 6].set_xticks(())
+# axes[i, 6].set_yticks(())
+
+
+# tmp = y_srgcl
+# tmp = np.where(tmp==1, 3, tmp)
+# tmp = np.where(tmp==0, 1, tmp)
+# tmp = np.where(tmp==3, 0, tmp)
+# axes[i, 7].scatter(X[:,0], X[:, 1], c=tmp, s=15)
+# axes[i, 7].set_xticks(())
+# axes[i, 7].set_yticks(())
 
 
 
@@ -699,6 +779,9 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 #                                                     affinity="cityblock",
 #                                                     n_clusters=k_list[i],
 #                                                     ).fit(X)
+# y_rgcl = RGCL(X, k_list[i], seed=seeds[i])
+# y_srgcl = RGCL(X, k_list[i], sus_exp=True, seed=seeds[i])
+
 
 # tmp = logits.argmax(dim=1).numpy()
 # axes[i, 1].scatter(X[:,0], X[:, 1], c=tmp, s=15)  
@@ -728,13 +811,22 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 # axes[i, 4].set_xticks(())
 # axes[i, 4].set_yticks(())   
 
- 
+
 # tmp = average_linkage.labels_
 # tmp -= 1
 # tmp = np.where(tmp==-1, 2, tmp)
 # axes[i, 5].scatter(X[:,0], X[:, 1], c=tmp, s=15)
 # axes[i, 5].set_xticks(())
 # axes[i, 5].set_yticks(())
+
+
+# axes[i, 6].scatter(X[:,0], X[:, 1], c=y_rgcl, s=15)
+# axes[i, 6].set_xticks(())
+# axes[i, 6].set_yticks(())
+
+# axes[i, 7].scatter(X[:,0], X[:, 1], c=y_srgcl, s=15)
+# axes[i, 7].set_xticks(())
+# axes[i, 7].set_yticks(())
 
 
 
@@ -778,6 +870,9 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 #                                                     affinity="cityblock",
 #                                                     n_clusters=k_list[i],
 #                                                     ).fit(X)
+# y_rgcl = RGCL(X, k_list[i], seed=seeds[i])
+# y_srgcl = RGCL(X, k_list[i], sus_exp=True, seed=seeds[i])
+
 
 # tmp = logits.argmax(dim=1).numpy()
 # tmp += 1
@@ -812,7 +907,7 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 # axes[i, 4].set_xticks(())
 # axes[i, 4].set_yticks(())   
 
- 
+
 # tmp = average_linkage.labels_
 # tmp = np.where(tmp==0, 3, tmp)
 # tmp = np.where(tmp==2, 0, tmp)
@@ -822,23 +917,29 @@ axes[0, 5].set_title('Agglomerative\nClustering')
 # axes[i, 5].set_yticks(())
 
 
+# tmp = y_rgcl
+# tmp += 1
+# tmp = np.where(tmp==3, 0, tmp)
+# axes[i, 6].scatter(X[:,0], X[:, 1], c=tmp, s=15)
+# axes[i, 6].set_xticks(())
+# axes[i, 6].set_yticks(())
+
+# tmp = y_srgcl
+# tmp += 1
+# tmp = np.where(tmp==3, 0, tmp)
+# axes[i, 7].scatter(X[:,0], X[:, 1], c=tmp, s=15)
+# axes[i, 7].set_xticks(())
+# axes[i, 7].set_yticks(())
 
 
 # axes[0, 0].set_title('Ground Truth')
 # axes[0, 1].set_title('ACE')
 # axes[0, 2].set_title('GMM')
 # axes[0, 3].set_title('K-Means')
-# axes[0, 4].set_title('Spectral\nClustering')
-# axes[0, 5].set_title('Agglomerative\nClustering')
-
-
-
-
-
-
-
-
-
+# axes[0, 4].set_title('Spectral Clustering')
+# axes[0, 5].set_title('Agglomerative Clustering')
+# axes[0, 6].set_title('RGCL')
+# axes[0, 7].set_title('SRGCL')
 
 
 
