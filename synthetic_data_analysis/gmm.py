@@ -241,7 +241,7 @@ def run(seed):
         
         
         # compute reward
-        rewards, _, _, _ = compute_reward(x_train, actions.numpy(), log_probs, dictionary, model_based)
+        rewards, _, _, _ = compute_reward(x_train, K, actions.numpy(), log_probs, dictionary, model_based)
         r_list.append(rewards.mean())
 #         print(f'average reward: {rewards.mean()}')
         rewards = torch.tensor(rewards, dtype=torch.float32)
@@ -269,7 +269,7 @@ def run(seed):
     with torch.no_grad():
         actions, log_probs, logits = actor(X)
 
-    rewards, pi_hat, mu_hat, sigma_hat = compute_reward(X, actions.numpy(), log_probs, dictionary)
+    rewards, pi_hat, mu_hat, sigma_hat = compute_reward(X, K, actions.numpy(), log_probs, dictionary)
     
     gm = GaussianMixture(n_components=K, n_init=1, random_state=seed).fit(X)
     y_pred = gm.predict(X)
