@@ -12,7 +12,7 @@ from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture
 from sklearn.metrics import adjusted_rand_score, adjusted_mutual_info_score, homogeneity_score, completeness_score, v_measure_score
 from sklearn.datasets import make_blobs, make_classification
-from sklearn.neighbors import DistanceMetric    # 0.17版的sklearn, 新版的在metrics下
+from sklearn.neighbors import DistanceMetric
 from scipy.stats import multivariate_normal
 
 import torch
@@ -93,11 +93,8 @@ def full_loglikelihood(x, pi, mu, sigma, label):
 
 
 def compute_reward(x, K, actions, log_probs, dictionary, model_based=True):
-    '''
-    dictionary的作用是为了防止出现某一类别没有被分配数据，无法计算均值和方差的情况。
-    这时赋值dictionary中的数值给相应的类。
-    考虑dictionary是不是可以在训练中不断地改善？
-    '''
+    
+    _, dim_x = x.shape
     reward_list = []
     mu_hat = []
     sigma_hat = []
@@ -108,7 +105,7 @@ def compute_reward(x, K, actions, log_probs, dictionary, model_based=True):
         else:
             mu_hat.append(np.mean(x[actions == k, :], axis=0))
         
-        if (actions == k).sum() <= p+1:    # 变量维数
+        if (actions == k).sum() <= dim_x+1:
             sigma_hat.append(dictionary[k]['sigma'])  
         else:
             sigma_hat.append(np.cov(x[actions==k, :], rowvar=False))
@@ -124,11 +121,11 @@ def compute_reward(x, K, actions, log_probs, dictionary, model_based=True):
         # intra-class distance
         s_w = 0
         for k in range(K):
-            dist = DistanceMetric.get_metric('mahalanobis', V=sigma_hat[k])
+            dist = DistanceMetric.get_metric('euclidean', V=sigma_hat[k])
             if (actions == k).sum() == 0:
                 s_wk = 0
             else:
-                s_wk = np.sum(dist.pairwise(x[actions==k,:], np.array([mu_hat[k]])))  # 这个是马氏距离开根号后的求和
+                s_wk = np.sum(dist.pairwise(x[actions==k,:], np.array([mu_hat[k]])))  
             # [(w - mu_hat[k]).dot(np.linalg.inv(sigma_hat[k])).dot((w - mu_hat[k]).T) for w in x[actions==k, :]]
             s_w += pi_hat[k] * s_wk
         # inter-class distance
@@ -163,7 +160,7 @@ max_steps = 5000
 # p = 3
 # K = 4
 # PI = [1/K for _ in range(K)] 
-# MU =  [[-8.5, -1.5, -1], [-1, 0, 8], [2.5, 7.5, -7], [3, -3, -0.5]]    # [[-3] * p, [0] * p, [3] * p],  [[-1, -1], [0, 3], [3, 1]]
+# MU =  [[-8.5, -1.5, -1], [-1, 0, 8], [2.5, 7.5, -7], [3, -3, -0.5]]    # [[-3] * p, [0] * p, [3] * p]
 # SIGMA = 2
 # COV = [np.diag([SIGMA] * p) for _ in range(K)]
 
@@ -201,6 +198,7 @@ def params_estimate(pi, mu, sigma):
     
     return rmse1, rmse2, rmse3
 
+early_stop = True
 
 def run(seed):  
     start = time.time()
@@ -258,13 +256,15 @@ def run(seed):
         
         # scheduler.step(actor_loss)
         
-#         if step > 6:
-#             if (abs(r_list[-1] - r_list[-2]) < 1e-3) & (abs(r_list[-2] - r_list[-3]) < 1e-3) \
-#                 & (abs(r_list[-3] - r_list[-4]) < 1e-3) & (abs(r_list[-4] - r_list[-5]) < 1e-3):
+        if early_stop & (step > 10):
+            if (abs(r_list[-1] - r_list[-2]) < 1e-3) & (abs(r_list[-2] - r_list[-3]) < 1e-3) \
+                & (abs(r_list[-3] - r_list[-4]) < 1e-3) & (abs(r_list[-4] - r_list[-5]) < 1e-3) \
+                & (abs(r_list[-5] - r_list[-6]) < 1e-3) & (abs(r_list[-6] - r_list[-7]) < 1e-3) \
+                & (abs(r_list[-7] - r_list[-8]) < 1e-3) & (abs(r_list[-8] - r_list[-9]) < 1e-3):
             
-#             # if abs(np.mean(r_list[:-10]) - np.mean(r_list[:-5])) < 1e-4:
-#                 print(f'converge at step {step}')
-#                 break
+            # if abs(np.mean(r_list[:-10]) - np.mean(r_list[:-5])) < 1e-4:
+                print(f'converge at step {step}')
+                break
     
     with torch.no_grad():
         actions, log_probs, logits = actor(X)
@@ -295,13 +295,13 @@ def run(seed):
 
 if __name__ == '__main__':   
     # results = []
-    # for sd in tqdm(range(20)):
+    # for sd in tqdm(range(50)):
     #     results.append(run(sd))
 
     # print("CPU的核数为：{}".format(mp.cpu_count()))
     start = time.time()
-    pool = mp.Pool(5)
-    dats = pool.map(run, range(50))
+    pool = mp.Pool(10)
+    dats = pool.map(run, range(100))
     pool.close()
     end = time.time()
     print(datetime.timedelta(seconds = end - start))
@@ -309,7 +309,7 @@ if __name__ == '__main__':
     
     dats = np.array([dat for dat in dats])
 
-    np.save('./results/GMM/n100_p2_K3_units256_bz100_lr1e-3_maxiter5000.npy', dats)
+    np.save('n100.npy', dats)
     
     print(dats.mean(axis=0))
     print(dats.std(axis=0))

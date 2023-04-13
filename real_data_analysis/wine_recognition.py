@@ -12,7 +12,7 @@ from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture
 from sklearn.metrics import adjusted_rand_score, adjusted_mutual_info_score, homogeneity_score, completeness_score, v_measure_score
 from sklearn.datasets import make_blobs, make_classification
-from sklearn.neighbors import DistanceMetric    # 0.17版的sklearn, 新版的在metrics下
+from sklearn.neighbors import DistanceMetric
 from sklearn import cluster, datasets
 from sklearn.neighbors import kneighbors_graph, NearestNeighbors
 from sklearn.metrics.pairwise import pairwise_kernels, pairwise_distances
@@ -37,7 +37,7 @@ import multiprocessing as mp
 from pprint import pprint
 from tqdm import tqdm
 
-
+from rgcl import RGCL
 
 
 def get_data(x, batch_size=32):
@@ -82,13 +82,13 @@ def compute_reward(x, K, actions, log_probs, dictionary, model_based=True):
     for k in range(K):
         # print((actions == k).sum())
         if (actions == k).sum() == 0:
-            print('mu can not be calculated')
+            # print('mu can not be calculated')
             mu_hat.append(dictionary[k]['mu'])
         else:
             mu_hat.append(np.mean(x[actions == k, :], axis=0))
         
         if (actions == k).sum() <= dim_x+1:    # 变量维数
-            print('cov can not be calculated')
+            # print('cov can not be calculated')
             sigma_hat.append(dictionary[k]['sigma'])  
         else:
             sigma_hat.append(np.cov(x[actions==k, :], rowvar=False))
@@ -103,7 +103,7 @@ def compute_reward(x, K, actions, log_probs, dictionary, model_based=True):
         # # intra-class distance
         # s_w = 0
         # for k in range(K):
-        #     dist = DistanceMetric.get_metric('euclidean')  # 'mahalanobis', V=sigma_hat[k]; 'euclidean'
+        #     dist = DistanceMetric.get_metric('euclidean')  
         #     if (actions == k).sum() == 0:
         #         s_wk = 0
         #     else:
@@ -119,6 +119,10 @@ def compute_reward(x, K, actions, log_probs, dictionary, model_based=True):
         # for _ in range(actions.size):
         #     reward_list.append(s_b - s_w)   # 减的效果比除要好
         
+        '''
+        In this case, we find just using a simple distance of each sample and its assigned cluster center as the reward can achieve better performance,
+        which indicate that more effort should be made to find a proper reward in the future work. 
+        '''
         for i, action in enumerate(actions):
             dist = np.linalg.norm(x[i, :] - mu_hat[action])
             reward_list.append(-dist)                           
@@ -191,11 +195,11 @@ K = 3
 embedding_dim = K
 
 model_based = False
-early_stop = False
+early_stop = True
 units = 256
 batch_size = 100
-lr = 1e-3
-max_steps = 5000
+lr = 5e-4
+max_steps = 10000
 
 graph = 'k_nearest'  # k_nearest, kernel_based
 mode = 'connectivity'    # distance, connectivity
@@ -262,9 +266,11 @@ def run(seed):
         
         # scheduler.step(actor_loss)
         
-        if early_stop & (step > 6):
+        if early_stop & (step > 10):
             if (abs(r_list[-1] - r_list[-2]) < 1e-3) & (abs(r_list[-2] - r_list[-3]) < 1e-3) \
-                & (abs(r_list[-3] - r_list[-4]) < 1e-3) & (abs(r_list[-4] - r_list[-5]) < 1e-3):
+                & (abs(r_list[-3] - r_list[-4]) < 1e-3) & (abs(r_list[-4] - r_list[-5]) < 1e-3) \
+                & (abs(r_list[-5] - r_list[-6]) < 1e-3) & (abs(r_list[-6] - r_list[-7]) < 1e-3) \
+                & (abs(r_list[-7] - r_list[-8]) < 1e-3) & (abs(r_list[-8] - r_list[-9]) < 1e-3):
             
             # if abs(np.mean(r_list[:-10]) - np.mean(r_list[:-5])) < 1e-4:
                 print(f'converge at step {step}')
@@ -289,7 +295,7 @@ def run(seed):
     y_pred = km.predict(X)
     results[2, :] = metrics(label, y_pred)
     
-    sc = cluster.SpectralClustering(n_clusters=K, n_components=K, affinity='nearest_neighbors', n_neighbors=20, random_state=seed).fit(X)  # rbf 依然解决不了circle问题
+    sc = cluster.SpectralClustering(n_clusters=K, n_components=K, affinity='nearest_neighbors', n_neighbors=n_neighbors, random_state=seed).fit(X)  # rbf 依然解决不了circle问题
     y_pred = sc.labels_
     results[3, :] = metrics(label, y_pred)
     
@@ -301,13 +307,11 @@ def run(seed):
     y_pred = average_linkage.labels_
     results[4, :] = metrics(label, y_pred)
     
-    dbscan = cluster.DBSCAN(eps=0.5, min_samples=5).fit(X)
-    y_pred = dbscan.labels_
-    results[5, :] = metrics(label, y_pred)
+    y_rgcl = RGCL(X, K, seed=seed)
+    results[5, :] = metrics(label, y_rgcl)
     
-    optics = cluster.OPTICS(min_samples=5, xi=0.05).fit(X)
-    y_pred = optics.labels_
-    results[6, :] = metrics(label, y_pred)
+    y_srgcl = RGCL(X, K, sus_exp=True, seed=seed)
+    results[6, :] = metrics(label, y_srgcl)
     
     end = time.time()
     print(f'rd: {seed} take {datetime.timedelta(seconds = end - start)}')
@@ -318,14 +322,14 @@ def run(seed):
 
 if __name__ == '__main__':   
     start = time.time()
-    dats = []
-    for sd in tqdm(range(5, 10)):
-        dats.append(run(sd))
+    # dats = []
+    # for sd in tqdm(range(5, 10)):
+    #     dats.append(run(sd))
 
 #     print("CPU的核数为：{}".format(mp.cpu_count()))    
-#     pool = mp.Pool(5)
-#     dats = pool.map(run, range(5, 10))
-#     pool.close()
+    pool = mp.Pool(5)
+    dats = pool.map(run, range(5, 10))
+    pool.close()
     end = time.time()
     print(datetime.timedelta(seconds = end - start))
     
@@ -333,7 +337,7 @@ if __name__ == '__main__':
     dats = np.array([dat for dat in dats])
 
 
-    np.save('./results/wine_rds5-10.npy', dats)    
+    np.save('./results/wine.npy', dats)    
         
     pprint(dats.mean(axis=0).round(3))
     pprint(dats.std(axis=0).round(3))
