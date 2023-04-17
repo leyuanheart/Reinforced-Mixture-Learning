@@ -221,7 +221,7 @@ def figure_6():
 #                     right=0.992,
 #                     hspace=0.273,
 #                     wspace=0.269)
-
+plt.style.use('seaborn-paper')
 
 model_based = False
 early_stop = False
@@ -424,7 +424,7 @@ fig, axes = plt.subplots(6, 8)
 #                     right=0.992,
 #                     hspace=0.273,
 #                     wspace=0.269)
-
+plt.style.use('seaborn-darkgrid')
 idx = 0
 for j in range(8):
     axes[0, j].scatter(X_embedded[:, 0], X_embedded[:, 1], 

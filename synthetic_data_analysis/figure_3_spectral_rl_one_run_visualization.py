@@ -318,7 +318,7 @@ fig, axes = plt.subplots(6, 8) # , figsize=(15, 45)
 #                     right=0.925,
 #                     hspace=0.2,
 #                     wspace=0.125)
-plt.style.use('seaborn-vO8-paper')    # seaborn-vO 8-dark, seaborn-vO8-paper, bmh
+plt.style.use('seaborn-paper')    # seaborn-dark, seaborn-paper, bmh
 
 
 i = 0

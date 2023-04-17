@@ -29,7 +29,7 @@ stds = dats.std(axis=1)
 def figure_2():
     
     plt.figure(figsize=(15, 10))
-    plt.style.use('bmh')
+    plt.style.use('seaborn-darkgrid')   # seaborn-paper, bmh
     # grids = plt.GridSpec(nrows=2, ncols=3)     
 
     ax0 = plt.subplot(2, 2, 1)

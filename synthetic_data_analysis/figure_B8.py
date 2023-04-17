@@ -27,10 +27,10 @@ means = dats.mean(axis=1)   # (n_samples, method_types, metrics)
 stds = dats.std(axis=1)
 
 
-def figure_2():
+def figure_B8():
     
     plt.figure(figsize=(15, 10))
-    plt.style.use('bmh')
+    plt.style.use('seaborn-darkgrid')
     # grids = plt.GridSpec(nrows=2, ncols=3)     
 
     ax0 = plt.subplot(2, 2, 1)
@@ -42,7 +42,7 @@ def figure_2():
     ax0.set_ylabel(metric_names[0])
     ax0.set_ylim(top=1)
     ax0.set_yticks([0.8, 0.85, 0.9, 0.95, 1])
-    ax0.legend(loc='best')
+    ax0.legend(loc='lower left')
 
     ax1 = plt.subplot(2, 2, 2)
     # ax1 = fig.add_subplot(grids[0, 1]) 
@@ -54,7 +54,7 @@ def figure_2():
     ax1.set_ylabel(metric_names[1])
     ax1.set_ylim(top=1)
     ax1.set_yticks([0.8, 0.85, 0.9, 0.95, 1])
-    ax1.legend(loc='best')
+    ax1.legend(loc='lower left')
 
     ax2 = plt.subplot(2, 3, 4)
     # ax2 = fig.add_subplot(grids[1, 0]) 
@@ -90,7 +90,7 @@ def figure_2():
     ax4.legend(loc='best')
 
 
-figure_2()
+figure_B8()
 
 ## For tables 
 # i = 0  

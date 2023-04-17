@@ -26,7 +26,7 @@ data_names = ['Iris Plants', 'Wine Recognition', 'Malware Executable Detection',
 
 def figure_5():
     fig = plt.figure()     # figsize=(10, 10)
-    plt.style.use('bmh')
+    plt.style.use('seaborn-darkgrid')
     plt.subplots_adjust(top=0.953,
                         bottom=0.052,
                         left=0.022,

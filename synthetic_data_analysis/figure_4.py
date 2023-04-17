@@ -31,7 +31,7 @@ idx_list = [2, 4, 1, 0, 5, 3]
 
 def figure_4():
     fig, axes = plt.subplots(2, 3, sharey=True)  # , figsize=(10, 10)
-    plt.style.use('bmh')
+    plt.style.use('seaborn-darkgrid')
     plt.subplots_adjust(top=0.95,
                         bottom=0.05,
                         left=0.11,
