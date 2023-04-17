@@ -31,19 +31,14 @@ We provide an example code in `example.ipynb`.
 
 For **synthetic data analysis**, we consider Gaussian mixture settings and general settings. 
 
-![fig](https://pic.imgdb.cn/item/62728f9a0947543129d6f2e4.png)
+![fig](https://pic.imgdb.cn/item/643cf4a30d2dde577701f845.png)
 
 You can run `gmm.py` and `model_free.py` in the `synthetic_data_analysis` to get the results in `results`. The files named like`figure_xx.py` are used to generate the figures in the paper. Each file is self-contained.
 
 For **real data analysis**, we apply our method to three UCI benchmark datasets summarized in the table below.
 
-| Dataset                      | Samples | Features | Number of clusters |
-| ---------------------------- | ------- | -------- | ------------------ |
-| Iris Plants                  | 150     | 4        | 3                  |
-| Wine Recognition             | 178     | 13       | 3                  |
-| Malware Executable Detection | 373     | 531      | 2                  |
-| Breast Cancer Wisconsin      | 569     | 30       | 2                  |
-| RNA-Seq PANCAN               | 801     | 20531    | 5                  |
-| APS Failure at Scania Trucks | 2750    | 170      | 2                  |
+![](https://pic.imgdb.cn/item/643cf49c0d2dde577701f0df.png)
 
 You can run each `{dataset_name}.py` in the `real_data_analysis` to get the results in `results`. The files named like`figure_xx.py` are used to generate the figures in the paper. Each file is self-contained.
+
+![](https://pic.imgdb.cn/item/643cf4a30d2dde577701f817.png)
