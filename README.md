@@ -1,6 +1,6 @@
 # Reinforced-Mixture-Learning
 
-This repository is the official implementation of the paper `Reinforced-Mixture-Learning`.
+This repository is the official implementation of the paper `Reinforced-Mixture-Learning` in *Neural Networks*.
 
 ## Requirements
 
